@@ -4,67 +4,399 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AI Resume Builder</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --accent:#0b6cf0; /* deep blue accent — change if you want */
+      --muted:#7b8aa5;
+      --card-bg:#ffffff;
+    }
+    body { font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#f6f8fb; }
+    .app-header {padding:20px 0;}
+    .panel { background:var(--card-bg); border-radius:12px; box-shadow:0 6px 18px rgba(36,59,85,0.06); padding:20px; }
+    .section-title { font-weight:600; color:#23374a; margin-bottom:12px; }
+    .small-muted { color:var(--muted); font-size:13px; }
+    .preview-card { background:#fff; border-radius:10px; padding:22px; border:1px solid #eef3fb; min-height:540px; }
+    .name-title { font-size:22px; font-weight:700; }
+    .job-title { color:var(--muted); margin-top:4px; font-size:14px; }
+    .section-heading { font-weight:600; font-size:12px; margin-top:14px; color:#2b3b4e; text-transform:uppercase; letter-spacing:0.6px; }
+    .bullet { margin-left:12px; }
+    .chip { display:inline-block; background:#eef6ff; color:var(--accent); padding:6px 10px; border-radius:999px; margin:4px 6px 4px 0; font-size:13px; }
+    .add-btn { color:var(--accent); background:transparent; border:1px dashed #ddecff; padding:6px 10px; border-radius:8px; }
+    .form-scroll { max-height:78vh; overflow:auto; padding-right:6px; }
+    .muted-border { border:1px solid #eef3fb; border-radius:8px; padding:12px; background:#fbfdff; }
+  </style>
 </head>
-<body class="bg-light">
-  <div class="container py-5">
-    <div class="row justify-content-center">
-      <div class="col-lg-8">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h1 class="h3 mb-3">AI Resume Builder</h1>
-            <p class="text-muted mb-4">Enter your details and get an ATS-friendly resume. Export to PDF or Word.</p>
+<body>
+  <div class="container-fluid px-4">
+    <div class="app-header d-flex align-items-center justify-content-between">
+      <div>
+        <h3 class="mb-0">AI Resume Builder — Instant & ATS friendly</h3>
+        <div class="small-muted">No sign-up. Fill, preview, download (PDF / Word).</div>
+      </div>
+      <div class="text-end small-muted">Simple • Clean • Download-ready</div>
+    </div>
 
-            {% with messages = get_flashed_messages() %}
-              {% if messages %}
-                <div class="alert alert-danger">
-                  {% for m in messages %} <div>{{ m }}</div> {% endfor %}
+    <div class="row g-4">
+      <!-- Left: Form -->
+      <div class="col-lg-6">
+        <div class="panel form-scroll">
+          <form id="resumeForm" method="POST" action="/">
+            <!-- PERSONAL -->
+            <div class="mb-4">
+              <div class="section-title">Personal Information</div>
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <label class="form-label small-muted">Full name</label>
+                  <input name="name" id="name" class="form-control form-control-lg" required>
                 </div>
-              {% endif %}
-            {% endwith %}
+                <div class="col-md-6">
+                  <label class="form-label small-muted">Target job title</label>
+                  <input name="job_title" id="job_title" class="form-control form-control-lg" required>
+                </div>
+                <div class="col-md-6 mt-2">
+                  <label class="form-label small-muted">Email</label>
+                  <input name="email" id="email" type="email" class="form-control">
+                </div>
+                <div class="col-md-6 mt-2">
+                  <label class="form-label small-muted">Phone</label>
+                  <input name="phone" id="phone" class="form-control">
+                </div>
+              </div>
+            </div>
 
-            <form method="POST">
-              <div class="mb-3">
-                <label class="form-label">Full Name</label>
-                <input name="name" class="form-control" required />
+            <!-- SUMMARY -->
+            <div class="mb-4">
+              <div class="section-title">Professional Summary</div>
+              <textarea name="summary" id="summary" class="form-control" rows="3" placeholder="Enter a brief professional summary (or leave blank for AI to generate)"></textarea>
+              <div class="small-muted mt-2">Tip: Include years of experience and top skills when possible.</div>
+            </div>
+
+            <!-- SKILLS -->
+            <div class="mb-4">
+              <div class="section-title">Skills</div>
+              <div class="d-flex gap-2 mb-2">
+                <input id="skillInput" class="form-control" placeholder="Type a skill and press Enter or Add" />
+                <button type="button" id="addSkillBtn" class="btn btn-outline-primary">Add</button>
+              </div>
+              <div id="skillsWrap" class="mb-2"></div>
+              <input type="hidden" name="skills" id="skillsHidden">
+              <div class="small-muted">Add core skills — they'll be shown as a comma-separated list in resumes.</div>
+            </div>
+
+            <!-- EXPERIENCE -->
+            <div class="mb-4">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="section-title">Experience</div>
+                <button type="button" class="add-btn" id="addExperienceBtn">+ Add Experience</button>
               </div>
 
-              <div class="mb-3">
-                <label class="form-label">Target Job Title</label>
-                <input name="job_title" class="form-control" required />
+              <div id="experienceList" class="mt-3">
+                <!-- Experience items will be appended here -->
               </div>
 
-              <div class="mb-3">
-                <label class="form-label">Short Summary / Objective (optional)</label>
-                <textarea name="summary" class="form-control" rows="2"></textarea>
+            </div>
+
+            <!-- EDUCATION -->
+            <div class="mb-4">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="section-title">Education</div>
+                <button type="button" class="add-btn" id="addEducationBtn">+ Add Education</button>
               </div>
 
-              <div class="mb-3">
-                <label class="form-label">Skills (comma separated)</label>
-                <textarea name="skills" class="form-control" rows="2" required></textarea>
+              <div id="educationList" class="mt-3">
+                <!-- Education items -->
               </div>
+            </div>
 
-              <div class="mb-3">
-                <label class="form-label">Work Experience (one job per line: company | years | role | achievements)</label>
-                <textarea name="experience" class="form-control" rows="4" placeholder="Acme Corp | 2019-2022 | Product Manager | Increased revenue by 20%"></textarea>
-              </div>
+            <!-- EXTRA (optional) -->
+            <div class="mb-4">
+              <div class="section-title">Extra (certifications, projects, languages)</div>
+              <textarea id="extra" name="extra" class="form-control" rows="2" placeholder="Optional: Certifications, volunteer, languages..."></textarea>
+            </div>
 
-              <div class="mb-3">
-                <label class="form-label">Education</label>
-                <textarea name="education" class="form-control" rows="2"></textarea>
-              </div>
+            <!-- Hidden fields to post serialized content your backend expects -->
+            <input type="hidden" name="experience" id="experienceHidden">
+            <input type="hidden" name="education" id="educationHidden">
 
-              <div class="d-flex justify-content-end">
-                <button type="submit" class="btn btn-primary">Generate Resume</button>
-              </div>
-            </form>
+            <div class="d-flex gap-2">
+              <button type="button" id="generateBtn" class="btn btn-primary">Generate Resume</button>
+              <button type="submit" class="btn btn-outline-secondary">Generate (submit)</button>
+              <div class="ms-auto small-muted align-self-center">Preview updates live as you type.</div>
+            </div>
 
-            <p class="mt-3 text-muted small">Tip: Include numbers in experience (%, $ or headcount) for better resume impact.</p>
+            <div class="mt-3 small-muted">After Generate, you will be taken to a preview page with download options (PDF/Word).</div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Right: Live Preview -->
+      <div class="col-lg-6">
+        <div class="preview-card panel">
+          <div id="previewContent">
+            <div class="name-title" id="pvName">Your Name</div>
+            <div class="job-title" id="pvJob">Target Job Title</div>
+
+            <div id="pvSummary" class="mt-3">
+              <div class="section-heading">Summary</div>
+              <div class="small-muted">A concise professional summary will appear here.</div>
+            </div>
+
+            <div id="pvSkills" class="mt-3">
+              <div class="section-heading">Skills</div>
+              <div class="small-muted">Skill1, Skill2, Skill3</div>
+            </div>
+
+            <div id="pvExperience" class="mt-3">
+              <div class="section-heading">Experience</div>
+              <div class="small-muted">Add experience entries on the left to see them here.</div>
+            </div>
+
+            <div id="pvEducation" class="mt-3">
+              <div class="section-heading">Education</div>
+              <div class="small-muted">Add education entries on the left to see them here.</div>
+            </div>
+
+            <div id="pvExtra" class="mt-3"></div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
+
+  <!-- Templates (hidden) -->
+  <template id="experienceTemplate">
+    <div class="mb-3 muted-border">
+      <div class="d-flex gap-2">
+        <input class="form-control form-control-sm flex-grow-1 exp-company" placeholder="Company name" />
+        <input class="form-control form-control-sm exp-role" placeholder="Role / Title" />
+      </div>
+      <div class="d-flex gap-2 mt-2">
+        <input type="month" class="form-control form-control-sm exp-start" />
+        <input type="month" class="form-control form-control-sm exp-end" />
+        <button type="button" class="btn btn-danger btn-sm ms-auto removeExpBtn">Remove</button>
+      </div>
+      <div class="mt-2">
+        <textarea class="form-control form-control-sm exp-desc" rows="2" placeholder="Achievements (one per line preferred)"></textarea>
+      </div>
+    </div>
+  </template>
+
+  <template id="educationTemplate">
+    <div class="mb-3 muted-border">
+      <div class="d-flex gap-2">
+        <input class="form-control form-control-sm edu-school" placeholder="School / University" />
+        <input class="form-control form-control-sm edu-degree" placeholder="Degree / Qualification" />
+      </div>
+      <div class="d-flex gap-2 mt-2">
+        <input type="month" class="form-control form-control-sm edu-start" />
+        <input type="month" class="form-control form-control-sm edu-end" />
+        <button type="button" class="btn btn-danger btn-sm ms-auto removeEduBtn">Remove</button>
+      </div>
+    </div>
+  </template>
+
+  <!-- JS -->
+  <script>
+    // Basic state
+    const skills = [];
+
+    // Helpers to create initial experience/education entries
+    function addExperience(data = {}) {
+      const tpl = document.getElementById('experienceTemplate').content.cloneNode(true);
+      const wrapper = tpl.children[0];
+      if (data.company) wrapper.querySelector('.exp-company').value = data.company;
+      if (data.role) wrapper.querySelector('.exp-role').value = data.role;
+      if (data.start) wrapper.querySelector('.exp-start').value = data.start;
+      if (data.end) wrapper.querySelector('.exp-end').value = data.end;
+      if (data.desc) wrapper.querySelector('.exp-desc').value = data.desc;
+      wrapper.querySelector('.removeExpBtn').addEventListener('click', ()=> {
+        wrapper.remove(); renderPreview();
+      });
+      document.getElementById('experienceList').appendChild(wrapper);
+      renderPreview();
+    }
+
+    function addEducation(data = {}) {
+      const tpl = document.getElementById('educationTemplate').content.cloneNode(true);
+      const wrapper = tpl.children[0];
+      if (data.school) wrapper.querySelector('.edu-school').value = data.school;
+      if (data.degree) wrapper.querySelector('.edu-degree').value = data.degree;
+      if (data.start) wrapper.querySelector('.edu-start').value = data.start;
+      if (data.end) wrapper.querySelector('.edu-end').value = data.end;
+      wrapper.querySelector('.removeEduBtn').addEventListener('click', ()=> {
+        wrapper.remove(); renderPreview();
+      });
+      document.getElementById('educationList').appendChild(wrapper);
+      renderPreview();
+    }
+
+    // Skill logic
+    document.getElementById('addSkillBtn').addEventListener('click', ()=> {
+      const val = document.getElementById('skillInput').value.trim();
+      if (!val) return;
+      skills.push(val);
+      document.getElementById('skillInput').value = '';
+      renderSkills();
+      renderPreview();
+    });
+
+    document.getElementById('skillInput').addEventListener('keydown', (e)=> {
+      if (e.key === 'Enter') { e.preventDefault(); document.getElementById('addSkillBtn').click(); }
+    });
+
+    function renderSkills() {
+      const wrap = document.getElementById('skillsWrap');
+      wrap.innerHTML = '';
+      skills.forEach((s, i) => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = s;
+        chip.addEventListener('click', ()=> { skills.splice(i,1); renderSkills(); renderPreview(); });
+        wrap.appendChild(chip);
+      });
+    }
+
+    // Preview renderer
+    function renderPreview() {
+      // Basic fields
+      const name = document.getElementById('name').value || 'Your Name';
+      const job = document.getElementById('job_title').value || 'Target Job Title';
+      document.getElementById('pvName').textContent = name;
+      document.getElementById('pvJob').textContent = job;
+
+      // Summary
+      const summary = document.getElementById('summary').value.trim();
+      const pvSummary = document.getElementById('pvSummary');
+      pvSummary.innerHTML = '<div class="section-heading">Summary</div>';
+      if (summary) pvSummary.innerHTML += `<div>${escapeHtml(summary)}</div>`;
+      else pvSummary.innerHTML += `<div class="small-muted">Leave blank and AI will generate a tailored summary.</div>`;
+
+      // Skills
+      const pvSkills = document.getElementById('pvSkills');
+      pvSkills.innerHTML = '<div class="section-heading">Skills</div>';
+      if (skills.length) pvSkills.innerHTML += `<div>${skills.map(s=>escapeHtml(s)).join(', ')}</div>`;
+      else pvSkills.innerHTML += `<div class="small-muted">Add skills (click chip to remove)</div>`;
+
+      // Experience
+      const expWrap = document.getElementById('pvExperience');
+      expWrap.innerHTML = '<div class="section-heading">Experience</div>';
+      const exps = Array.from(document.querySelectorAll('#experienceList > .muted-border'));
+      if (exps.length === 0) {
+        expWrap.innerHTML += `<div class="small-muted">No experience added yet.</div>`;
+      } else {
+        exps.forEach(node => {
+          const company = node.querySelector('.exp-company').value || '';
+          const role = node.querySelector('.exp-role').value || '';
+          const start = node.querySelector('.exp-start').value;
+          const end = node.querySelector('.exp-end').value;
+          const desc = node.querySelector('.exp-desc').value || '';
+          const header = `<div style="font-weight:600">${escapeHtml(role)} — ${escapeHtml(company)}</div>`;
+          const dates = (start || end) ? `<div class="small-muted">${formatMonth(start)} — ${formatMonth(end)}</div>` : '';
+          const bullets = desc ? `<div class="bullet">${escapeHtml(desc).replace(/\n/g,'<br>')}</div>` : '';
+          expWrap.innerHTML += `<div class="mb-2">${header}${dates}${bullets}</div>`;
+        });
+      }
+
+      // Education
+      const eduWrap = document.getElementById('pvEducation');
+      eduWrap.innerHTML = '<div class="section-heading">Education</div>';
+      const edus = Array.from(document.querySelectorAll('#educationList > .muted-border'));
+      if (edus.length === 0) {
+        eduWrap.innerHTML += `<div class="small-muted">No education added yet.</div>`;
+      } else {
+        edus.forEach(node => {
+          const school = node.querySelector('.edu-school').value || '';
+          const degree = node.querySelector('.edu-degree').value || '';
+          const start = node.querySelector('.edu-start').value;
+          const end = node.querySelector('.edu-end').value;
+          const header = `<div style="font-weight:600">${escapeHtml(degree)} — ${escapeHtml(school)}</div>`;
+          const dates = (start || end) ? `<div class="small-muted">${formatMonth(start)} — ${formatMonth(end)}</div>` : '';
+          eduWrap.innerHTML += `<div class="mb-2">${header}${dates}</div>`;
+        });
+      }
+
+      // Extra
+      const extra = document.getElementById('extra').value.trim();
+      const pvExtra = document.getElementById('pvExtra');
+      pvExtra.innerHTML = '';
+      if (extra) {
+        pvExtra.innerHTML = '<div class="section-heading">Additional</div>';
+        pvExtra.innerHTML += `<div>${escapeHtml(extra).replace(/\n/g,'<br>')}</div>`;
+      }
+
+      // Update hidden skills
+      document.getElementById('skillsHidden').value = skills.join(', ');
+    }
+
+    // Utilities
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; });
+    }
+    function formatMonth(val) {
+      if (!val) return '';
+      const [y,m] = val.split('-');
+      if (!y || !m) return '';
+      const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      return monthNames[parseInt(m,10)-1] + ' ' + y;
+    }
+
+    // Build serialized experience & education fields for backend
+    function serializeAndSubmit(submit=false) {
+      // Experience: one line per job like "Company | 2019-2022 | Role | bullet1; bullet2"
+      const exps = Array.from(document.querySelectorAll('#experienceList > .muted-border'));
+      const expLines = exps.map(node => {
+        const company = node.querySelector('.exp-company').value.trim();
+        const role = node.querySelector('.exp-role').value.trim();
+        const start = node.querySelector('.exp-start').value;
+        const end = node.querySelector('.exp-end').value;
+        const desc = node.querySelector('.exp-desc').value.trim().replace(/\n/g,'; ');
+        const years = (start||end) ? `${formatMonth(start)} — ${formatMonth(end)}` : '';
+        return `${company} | ${years} | ${role} | ${desc}`;
+      }).filter(s=>s.trim()!=='');
+      document.getElementById('experienceHidden').value = expLines.join('\n');
+
+      // Education: one line per school "School | 2016-2020 | Degree"
+      const edus = Array.from(document.querySelectorAll('#educationList > .muted-border'));
+      const eduLines = edus.map(node => {
+        const school = node.querySelector('.edu-school').value.trim();
+        const degree = node.querySelector('.edu-degree').value.trim();
+        const start = node.querySelector('.edu-start').value;
+        const end = node.querySelector('.edu-end').value;
+        const years = (start||end) ? `${formatMonth(start)} — ${formatMonth(end)}` : '';
+        return `${school} | ${years} | ${degree}`;
+      }).filter(s=>s.trim()!=='');
+      document.getElementById('educationHidden').value = eduLines.join('\n');
+
+      // Optionally submit the form (server-side generation)
+      if (submit) {
+        document.getElementById('resumeForm').submit();
+      }
+    }
+
+    // Events wiring
+    document.getElementById('addExperienceBtn').addEventListener('click', ()=> addExperience());
+    document.getElementById('addEducationBtn').addEventListener('click', ()=> addEducation());
+
+    // Generate preview button (create the serialized fields then submit)
+    document.getElementById('generateBtn').addEventListener('click', ()=> {
+      serializeAndSubmit(true);
+    });
+
+    // Live preview on input change
+    document.addEventListener('input', ()=> { renderPreview(); serializeAndSubmit(false); });
+
+    // initial page setup: add one blank experience & education row
+    addExperience();
+    addEducation();
+    renderPreview();
+  </script>
 </body>
 </html>
