@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Classic ATS Resume Builder</title>
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --ink: #111;
+    --muted: #6c757d;
+    --accent: #0d6efd;
+    --line: #e9ecef;
+  }
+  html, body { height:100%; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background:#f6f8fb;
+    color: var(--ink);
+  }
+  header {
+    padding: 24px 0 8px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 16px;
+  }
+  .brand h1 {
+    font-size: clamp(20px, 3vw, 26px);
+    margin:0;
+    font-weight: 700;
+  }
+  .brand small { color: var(--muted); }
+  .chip {
+    background:#f1f3f5; border:1px solid #e9ecef; border-radius:999px; padding:.35rem .65rem; font-size:.85rem;
+  }
+  .panel {
+    background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow: 0 4px 18px rgba(0,0,0,.04);
+  }
+  .section-title {
+    font-weight: 700; font-size: .95rem; letter-spacing:.02em;
+    text-transform: uppercase; color:#2b2f36;
+    border-bottom:2px solid var(--accent); padding-bottom:6px; margin-bottom:12px;
+  }
+  .subtle {
+    color: var(--muted); font-size:.9rem;
+  }
+  /* Preview (classic resume look) */
+  #previewContent {
+    background:#fff;
+    padding: 32px 36px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    min-height: 980px;
+  }
+  #pvHeader { text-align:center; margin-bottom: 8px; }
+  #pvName { font-weight:800; font-size:28px; margin-bottom:2px; }
+  #pvJob { font-weight:600; font-size:16px; color:#1f3c88; margin-bottom:6px; }
+  #pvContact { color:#444; font-size: 13px; }
+  #pvContact a { color:#444; text-decoration: none; }
+  .pv-section { margin-top:14px; }
+  .pv-heading {
+    font-weight:700; font-size:13.5px; letter-spacing: .06em; text-transform:uppercase;
+    border-bottom: 1.5px solid #1f3c88; padding-bottom:4px; margin-bottom:6px; color:#1a1d21;
+  }
+  .pv-block { margin-bottom:8px; }
+  .pv-role { font-weight:700; }
+  .pv-line { line-height:1.35; }
+  .pv-small { font-size:12px; color:#555; }
+
+  /* Form layout */
+  .f-label { font-size:.85rem; color: var(--muted); margin-bottom:4px; }
+  .remove-entry { font-size: .8rem; }
+  .skill-chip {
+    display:inline-block; background:#0d6efd; color:#fff; border-radius:18px;
+    padding:6px 12px; font-size:.9rem; margin:3px 4px 3px 0; cursor:pointer; user-select:none;
+  }
+  .skill-chip:hover { background:#084298; }
+  .muted-border { border-color:#e9ecef!important; }
+
+  @media (max-width: 991px) {
+    #previewContent { margin-top:16px;}
+  }
+</style>
+</head>
+<body>
+<div class="container py-3">
+  <header class="d-flex align-items-center justify-content-between">
+    <div class="brand">
+      <h1 class="mb-1">Classic ATS Resume Builder</h1>
+      <small>Clean • Professional • Single File</small>
+    </div>
+    <div class="d-none d-md-flex gap-2">
+      <span class="chip">Live Preview</span>
+      <span class="chip">PDF & DOCX</span>
+      <span class="chip">ATS-safe</span>
+    </div>
+  </header>
+
+  <div class="row g-3">
+    <!-- LEFT: Form -->
+    <div class="col-lg-6">
+      <div class="panel p-3">
+        <form id="resumeForm" novalidate>
+          <!-- PERSONAL -->
+          <div class="mb-3">
+            <div class="section-title">Personal</div>
+            <div class="row g-2">
+              <div class="col-md-6">
+                <div class="f-label">Full Name</div>
+                <input id="name" class="form-control form-control-lg" placeholder="e.g., Taylor Morgan" required />
+              </div>
+              <div class="col-md-6">
+                <div class="f-label">Target Job Title</div>
+                <input id="jobTitle" class="form-control form-control-lg" placeholder="e.g., Software Engineer" required />
+              </div>
+
+              <div class="col-md-6">
+                <div class="f-label">Email</div>
+                <input id="email" type="email" class="form-control" placeholder="you@example.com" />
+              </div>
+              <div class="col-md-6">
+                <div class="f-label">Phone</div>
+                <input id="phone" type="tel" class="form-control" placeholder="+1 555 111 2222" />
+              </div>
+
+              <div class="col-12">
+                <div class="f-label">Portfolio (HTTPS LinkedIn/Indeed)</div>
+                <input
+                  id="portfolio"
+                  type="url"
+                  class="form-control"
+                  placeholder="https://linkedin.com/in/username"
+                  pattern="https://.*"
+                  title="Must start with https://"
+                />
+                <div id="portfolioMsg" class="form-text text-danger d-none">Enter a secure LinkedIn or Indeed URL (https://).</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ADDRESS -->
+          <div class="mb-3">
+            <div class="section-title">Address</div>
+            <div class="row g-2">
+              <div class="col-12"><input id="address1" class="form-control" placeholder="Address Line 1" /></div>
+              <div class="col-12"><input id="address2" class="form-control" placeholder="Address Line 2 (optional)" /></div>
+              <div class="col-md-6"><input id="place" class="form-control" placeholder="City" /></div>
+              <div class="col-md-3"><input id="country" class="form-control" placeholder="Country" /></div>
+              <div class="col-md-3"><input id="postalCode" class="form-control" placeholder="Postal Code" /></div>
+            </div>
+          </div>
+
+          <!-- SUMMARY -->
+          <div class="mb-3">
+            <div class="section-title">Summary</div>
+            <textarea id="summary" class="form-control" rows="3" placeholder="Brief professional summary (2–4 lines)"></textarea>
+            <div class="subtle mt-1">Tip: years of experience, standout skills, outcomes.</div>
+          </div>
+
+          <!-- EXPERIENCE -->
+          <div class="mb-3">
+            <div class="section-title d-flex align-items-center justify-content-between">
+              <span>Experience</span>
+              <button class="btn btn-outline-secondary btn-sm" type="button" id="addExperienceBtn">+ Add Another</button>
+            </div>
+            <div id="experienceList"></div>
+          </div>
+
+          <!-- EDUCATION -->
+          <div class="mb-3">
+            <div class="section-title d-flex align-items-center justify-content-between">
+              <span>Education</span>
+              <button class="btn btn-outline-secondary btn-sm" type="button" id="addEducationBtn">+ Add Another</button>
+            </div>
+            <div id="educationList"></div>
+          </div>
+
+          <!-- CERTIFICATIONS -->
+          <div class="mb-3">
+            <div class="section-title d-flex align-items-center justify-content-between">
+              <span>Certifications</span>
+              <button class="btn btn-outline-secondary btn-sm" type="button" id="addCertificationBtn">+ Add Another</button>
+            </div>
+            <div id="certificationsList"></div>
+          </div>
+
+          <!-- SKILLS -->
+          <div class="mb-3">
+            <div class="section-title">Skills</div>
+            <div class="d-flex gap-2 mb-2">
+              <input id="skillInput" class="form-control" placeholder="Type a skill and press Add" />
+              <button type="button" id="addSkillBtn" class="btn btn-outline-primary">Add</button>
+            </div>
+            <div id="skillsWrap" class="mb-2"></div>
+            <div class="subtle">Click a skill chip to remove it.</div>
+          </div>
+
+          <!-- LANGUAGES -->
+          <div class="mb-3">
+            <div class="section-title d-flex align-items-center justify-content-between">
+              <span>Languages</span>
+              <button class="btn btn-outline-secondary btn-sm" type="button" id="addLanguageBtn">+ Add Another</button>
+            </div>
+            <div id="languagesList"></div>
+          </div>
+
+          <!-- EXTRAS -->
+          <div class="mb-3">
+            <div class="section-title d-flex align-items-center justify-content-between">
+              <span>Extras</span>
+              <button class="btn btn-outline-secondary btn-sm" type="button" id="addExtraBtn">+ Add Another</button>
+            </div>
+            <div id="extrasList"></div>
+          </div>
+
+          <!-- Actions -->
+          <div class="d-flex gap-2 flex-wrap">
+            <button type="button" id="generateBtn" class="btn btn-primary">Generate Preview</button>
+            <button type="button" id="downloadPdfBtn" class="btn btn-outline-success">Download PDF</button>
+            <button type="button" id="downloadWordBtn" class="btn btn-outline-secondary">Download DOCX</button>
+            <div class="ms-auto subtle">Preview updates live</div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- RIGHT: Preview -->
+    <div class="col-lg-6">
+      <div class="panel p-3">
+        <div id="previewContent">
+          <div id="pvHeader">
+            <div id="pvName">Your Name</div>
+            <div id="pvJob">Target Job Title</div>
+            <div id="pvContact"></div>
+          </div>
+          <div id="pvAddress" class="pv-section"></div>
+          <div id="pvSummary" class="pv-section"></div>
+          <div id="pvExperience" class="pv-section"></div>
+          <div id="pvEducation" class="pv-section"></div>
+          <div id="pvCertifications" class="pv-section"></div>
+          <div id="pvSkills" class="pv-section"></div>
+          <div id="pvLanguages" class="pv-section"></div>
+          <div id="pvExtras" class="pv-section"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Templates for dynamic entries -->
+<template id="experienceTemplate">
+  <div class="mb-3 muted-border experience-item border rounded p-2">
+    <div class="row g-2">
+      <div class="col-md-6"><input class="form-control form-control-sm exp-company" placeholder="Company" /></div>
+      <div class="col-md-6"><input class="form-control form-control-sm exp-role" placeholder="Role / Title" /></div>
+      <div class="col-md-4"><input type="month" class="form-control form-control-sm exp-start" title="Start (YYYY-MM)" /></div>
+      <div class="col-md-4"><input type="month" class="form-control form-control-sm exp-end" title="End (YYYY-MM)" /></div>
+      <div class="col-md-4 d-flex justify-content-md-end">
+        <button type="button" class="btn btn-danger btn-sm remove-entry">Remove</button>
+      </div>
+      <div class="col-12">
+        <textarea class="form-control form-control-sm exp-desc" rows="2" placeholder="Achievements (one per line)"></textarea>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="educationTemplate">
+  <div class="mb-3 muted-border education-item border rounded p-2">
+    <div class="row g-2">
+      <div class="col-md-6"><input class="form-control form-control-sm edu-school" placeholder="School / University" /></div>
+      <div class="col-md-6"><input class="form-control form-control-sm edu-degree" placeholder="Degree / Qualification" /></div>
+      <div class="col-md-4"><input type="month" class="form-control form-control-sm edu-start" /></div>
+      <div class="col-md-4"><input type="month" class="form-control form-control-sm edu-end" /></div>
+      <div class="col-md-4 d-flex justify-content-md-end">
+        <button type="button" class="btn btn-danger btn-sm remove-entry">Remove</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="certificationTemplate">
+  <div class="mb-3 muted-border certification-entry border rounded p-2">
+    <div class="row g-2">
+      <div class="col-md-5"><input class="form-control form-control-sm cert-name" placeholder="Certification" /></div>
+      <div class="col-md-5"><input class="form-control form-control-sm cert-issuer" placeholder="Issuer" /></div>
+      <div class="col-md-2"><input type="month" class="form-control form-control-sm cert-date" /></div>
+      <div class="col-12 d-flex justify-content-md-end">
+        <button type="button" class="btn btn-danger btn-sm remove-entry">Remove</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="languageTemplate">
+  <div class="mb-2 muted-border language-entry d-flex gap-2 align-items-center border rounded p-2">
+    <input class="form-control form-control-sm lang-name" placeholder="Language" style="max-width:55%" />
+    <select class="form-select form-select-sm lang-proficiency" style="max-width:40%">
+      <option value="">Proficiency</option>
+      <option>Beginner</option>
+      <option>Intermediate</option>
+      <option>Fluent</option>
+      <option>Native</option>
+    </select>
+    <button type="button" class="btn btn-danger btn-sm remove-entry">Remove</button>
+  </div>
+</template>
+
+<template id="extraTemplate">
+  <div class="mb-3 muted-border extra-entry border rounded p-2">
+    <div class="row g-2">
+      <div class="col-12"><input class="form-control form-control-sm extra-desc" placeholder="Description" /></div>
+      <div class="col-md-6"><input type="month" class="form-control form-control-sm extra-date" /></div>
+      <div class="col-md-6 d-flex justify-content-md-end">
+        <button type="button" class="btn btn-danger btn-sm remove-entry">Remove</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+(function() {
+  // Helpers
+  const $ = (s, p=document) => p.querySelector(s);
+  const $$ = (s, p=document) => Array.from(p.querySelectorAll(s));
+
+  // Portfolio URL validation (https + LinkedIn/Indeed)
+  function isValidPortfolio(url) {
+    if (!url) return true; // optional
+    if (!/^https:\/\//i.test(url)) return false;
+    return /^(https:\/\/)(www\.)?(linkedin\.com|indeed\.com)\//i.test(url);
+  }
+
+  // Create elements from <template>
+  function createFromTemplate(id) {
+    const t = document.getElementById(id);
+    return t.content.firstElementChild.cloneNode(true);
+  }
+
+  // Add/remove entry
+  function addEntry(listId, templateId) {
+    const wrap = document.getElementById(listId);
+    const node = createFromTemplate(templateId);
+    wrap.appendChild(node);
+    node.querySelector('.remove-entry').addEventListener('click', () => {
+      node.remove();
+      updatePreview();
+    });
+    updatePreview();
+  }
+
+  // Skills chips
+  const skills = [];
+  const skillInput = $('#skillInput');
+  const skillsWrap = $('#skillsWrap');
+  function renderSkills() {
+    skillsWrap.innerHTML = '';
+    skills.forEach((txt, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'skill-chip';
+      chip.textContent = txt;
+      chip.title = 'Click to remove';
+      chip.addEventListener('click', () => {
+        skills.splice(i, 1);
+        renderSkills();
+        updatePreview();
+      });
+      skillsWrap.appendChild(chip);
+    });
+  }
+  $('#addSkillBtn').addEventListener('click', () => {
+    const v = (skillInput.value || '').trim();
+    if (v && !skills.includes(v)) {
+      skills.push(v);
+      skillInput.value = '';
+      renderSkills();
+      updatePreview();
+    }
+  });
+  skillInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); $('#addSkillBtn').click(); }
+  });
+
+  // Add buttons
+  $('#addExperienceBtn').addEventListener('click', () => addEntry('experienceList','experienceTemplate'));
+  $('#addEducationBtn').addEventListener('click', () => addEntry('educationList','educationTemplate'));
+  $('#addCertificationBtn').addEventListener('click', () => addEntry('certificationsList','certificationTemplate'));
+  $('#addLanguageBtn').addEventListener('click', () => addEntry('languagesList','languageTemplate'));
+  $('#addExtraBtn').addEventListener('click', () => addEntry('extrasList','extraTemplate'));
+
+  // Collect form as JSON
+  function collectData() {
+    const data = {
+      name: $('#name').value.trim(),
+      job_title: $('#jobTitle').value.trim(),
+      email: $('#email').value.trim(),
+      phone: $('#phone').value.trim(),
+      portfolio_link: $('#portfolio').value.trim(),
+      address1: $('#address1').value.trim(),
+      address2: $('#address2').value.trim(),
+      place: $('#place').value.trim(),
+      country: $('#country').value.trim(),
+      postalCode: $('#postalCode').value.trim(),
+      summary: $('#summary').value.trim(),
+      skills: skills.slice(),
+      experience: [],
+      education: [],
+      certifications: [],
+      languages: [],
+      extras: []
+    };
+
+    // Experience
+    $$('#experienceList .experience-item').forEach(item => {
+      const company = $('.exp-company', item).value.trim();
+      const role = $('.exp-role', item).value.trim();
+      const start = $('.exp-start', item).value;
+      const end = $('.exp-end', item).value;
+      const desc = $('.exp-desc', item).value.trim();
+      if (company || role || desc || start || end) {
+        data.experience.push({
+          company, role, start, end,
+          achievements: desc ? desc.split('\n').map(s => s.trim()).filter(Boolean) : []
+        });
+      }
+    });
+
+    // Education
+    $$('#educationList .education-item').forEach(item => {
+      const school = $('.edu-school', item).value.trim();
+      const degree = $('.edu-degree', item).value.trim();
+      const start = $('.edu-start', item).value;
+      const end = $('.edu-end', item).value;
+      if (school || degree || start || end) {
+        data.education.push({ school, degree, start, end });
+      }
+    });
+
+    // Certifications
+    $$('#certificationsList .certification-entry').forEach(item => {
+      const name = $('.cert-name', item).value.trim();
+      const issuer = $('.cert-issuer', item).value.trim();
+      const date = $('.cert-date', item).value;
+      if (name || issuer || date) data.certifications.push({ name, issuer, date });
+    });
+
+    // Languages
+    $$('#languagesList .language-entry').forEach(item => {
+      const lang = $('.lang-name', item).value.trim();
+      const prof = $('.lang-proficiency', item).value.trim();
+      if (lang) data.languages.push({ language: lang, proficiency: prof });
+    });
+
+    // Extras
+    $$('#extrasList .extra-entry').forEach(item => {
+      const desc = $('.extra-desc', item).value.trim();
+      const date = $('.extra-date', item).value;
+      if (desc || date) data.extras.push({ desc, date });
+    });
+
+    return data;
+  }
+
+  // Live preview
+  function updatePreview() {
+    // validate portfolio
+    const port = $('#portfolio').value.trim();
+    const ok = isValidPortfolio(port);
+    $('#portfolioMsg').classList.toggle('d-none', ok);
+
+    const d = collectData();
+
+    // Header
+    $('#pvName').textContent = d.name || 'Your Name';
+    $('#pvJob').textContent = d.job_title || 'Target Job Title';
+
+    const contact = [];
+    if (d.phone) contact.push(d.phone);
+    if (d.email) contact.push(`<a href="mailto:${d.email}">${d.email}</a>`);
+    if (d.portfolio_link) contact.push(`<a href="${d.portfolio_link}" target="_blank" rel="noopener noreferrer">${d.portfolio_link}</a>`);
+    $('#pvContact').innerHTML = contact.join(' | ');
+
+    // Address
+    const addr = [d.address1, d.address2, d.place, d.country, d.postalCode].filter(Boolean);
+    $('#pvAddress').innerHTML = addr.length
+      ? `<div class="pv-heading">Address</div><div class="pv-line">${addr.join('<br/>')}</div>` : '';
+
+    // Summary
+    $('#pvSummary').innerHTML = d.summary
+      ? `<div class="pv-heading">Summary</div><div class="pv-line">${d.summary.replace(/\n/g,'<br/>')}</div>` : '';
+
+    // Experience
+    const expBlocks = d.experience.map(e => {
+      const date = [e.start, e.end].filter(Boolean).join(' — ');
+      const bullets = (e.achievements || []).map(a => `<li>${a}</li>`).join('');
+      return `
+        <div class="pv-block">
+          <div class="pv-role">${e.role || ''}${e.company ? ' — ' + e.company : ''}</div>
+          ${date ? `<div class="pv-small">${date}</div>` : ''}
+          ${bullets ? `<ul class="mb-1">${bullets}</ul>` : ''}
+        </div>`;
+    }).join('');
+    $('#pvExperience').innerHTML = expBlocks ? `<div class="pv-heading">Experience</div>${expBlocks}` : '';
+
+    // Education
+    const eduBlocks = d.education.map(ed => {
+      const date = [ed.start, ed.end].filter(Boolean).join(' — ');
+      return `
+        <div class="pv-block">
+          <div class="pv-role">${ed.degree || ''}${ed.school ? ' — ' + ed.school : ''}</div>
+          ${date ? `<div class="pv-small">${date}</div>` : ''}
+        </div>`;
+    }).join('');
+    $('#pvEducation').innerHTML = eduBlocks ? `<div class="pv-heading">Education</div>${eduBlocks}` : '';
+
+    // Certifications
+    const certBlocks = d.certifications.map(c => {
+      return `
+        <div class="pv-block">
+          <div class="pv-role">${c.name || ''}${c.issuer ? ' — ' + c.issuer : ''}</div>
+          ${c.date ? `<div class="pv-small">${c.date}</div>` : ''}
+        </div>`;
+    }).join('');
+    $('#pvCertifications').innerHTML = certBlocks ? `<div class="pv-heading">Certifications</div>${certBlocks}` : '';
+
+    // Skills
+    $('#pvSkills').innerHTML = (d.skills && d.skills.length)
+      ? `<div class="pv-heading">Skills</div><div class="pv-line">${d.skills.join(', ')}</div>` : '';
+
+    // Languages
+    const langBlocks = d.languages.map(l => `<span>${l.language}${l.proficiency ? ' — ' + l.proficiency : ''}</span>`).join('<br/>');
+    $('#pvLanguages').innerHTML = langBlocks ? `<div class="pv-heading">Languages</div><div>${langBlocks}</div>` : '';
+
+    // Extras
+    const extraBlocks = d.extras.map(x => `<div class="pv-block">${x.desc || ''}${x.date ? ' — <span class="pv-small">'+x.date+'</span>' : ''}</div>`).join('');
+    $('#pvExtras').innerHTML = extraBlocks ? `<div class="pv-heading">Extras</div>${extraBlocks}` : '';
+  }
+
+  // Wire update on input
+  $('#resumeForm').addEventListener('input', updatePreview);
+
+  // Initial rows
+  addEntry('experienceList','experienceTemplate');
+  addEntry('educationList','educationTemplate');
+  addEntry('certificationsList','certificationTemplate');
+  addEntry('languagesList','languageTemplate');
+  addEntry('extrasList','extraTemplate');
+
+  // Initial render
+  updatePreview();
+
+  // Generate (just refresh preview)
+  $('#generateBtn').addEventListener('click', () => {
+    updatePreview();
+    alert('Preview refreshed.');
+  });
+
+  // Download helpers
+  async function postForBlob(url, payload) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const msg = await res.text();
+      throw new Error(msg || ('HTTP ' + res.status));
+    }
+    return await res.blob();
+  }
+  function downloadBlob(blob, filename) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      URL.revokeObjectURL(a.href);
+      a.remove();
+    }, 0);
+  }
+
+  // PDF
+  $('#downloadPdfBtn').addEventListener('click', async () => {
+    updatePreview();
+    const data = collectData();
+    if (!isValidPortfolio(data.portfolio_link)) {
+      alert('Portfolio must be a secure LinkedIn or Indeed URL (https://)');
+      return;
+    }
+    try {
+      const blob = await postForBlob('/download-pdf', data);
+      downloadBlob(blob, (data.name || 'resume') + '_Resume.pdf');
+    } catch (e) {
+      alert('PDF error: ' + e.message);
+    }
+  });
+
+  // DOCX
+  $('#downloadWordBtn').addEventListener('click', async () => {
+    updatePreview();
+    const data = collectData();
+    if (!isValidPortfolio(data.portfolio_link)) {
+      alert('Portfolio must be a secure LinkedIn or Indeed URL (https://)');
+      return;
+    }
+    try {
+      const blob = await postForBlob('/download-docx', data);
+      downloadBlob(blob, (data.name || 'resume') + '_Resume.docx');
+    } catch (e) {
+      alert('DOCX error: ' + e.message);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
