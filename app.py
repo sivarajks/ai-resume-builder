@@ -169,7 +169,7 @@ def generate_docx_bytes(data: dict) -> BytesIO:
 
     # Header
     from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-    
+
     name = _safe(data.get("name")) or "Your Name"
     job  = _safe(data.get("job_title")) or "Target Job Title"
     doc.add_heading(name, level=1)
@@ -183,7 +183,7 @@ def generate_docx_bytes(data: dict) -> BytesIO:
     if _safe(data.get("email")): contact.append(_safe(data["email"]))
     if _safe(data.get("portfolio_link")): contact.append(_safe(data["portfolio_link"]))
     if contact:
-        doc.add_paragraph(" | ".join(contact))
+        contact_para = doc.add_paragraph(" | ".join(contact))
         contact_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     # Address
