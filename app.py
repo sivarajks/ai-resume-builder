@@ -65,7 +65,7 @@ def generate_pdf_bytes(data: dict) -> BytesIO:
     h_name = ParagraphStyle('h_name', parent=base, fontSize=18, leading=22, spaceAfter=4, alignment=TA_CENTER)
     h_job  = ParagraphStyle('h_job', parent=base, fontSize=12, leading=15, textColor="#1f3c88", spaceAfter=6, alignment=TA_CENTER)
     h_sec  = ParagraphStyle('h_sec', parent=base, fontSize=11, leading=14, spaceBefore=10, spaceAfter=4)
-    small  = ParagraphStyle('small', parent=base, fontSize=9.5, leading=12)
+    small  = ParagraphStyle('small', parent=base, fontSize=9.5, leading=12, alignment=TA_CENTER)
 
     story = []
 
@@ -168,11 +168,14 @@ def generate_docx_bytes(data: dict) -> BytesIO:
     font.size = Pt(11)
 
     # Header
+    from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+    
     name = _safe(data.get("name")) or "Your Name"
     job  = _safe(data.get("job_title")) or "Target Job Title"
     doc.add_heading(name, level=1)
     p = doc.add_paragraph(job)
     p.runs[0].bold = True
+    p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     # Contact
     contact = []
@@ -181,6 +184,7 @@ def generate_docx_bytes(data: dict) -> BytesIO:
     if _safe(data.get("portfolio_link")): contact.append(_safe(data["portfolio_link"]))
     if contact:
         doc.add_paragraph(" | ".join(contact))
+        contact_para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     # Address
     addr = [data.get("address1"), data.get("address2"), data.get("place"), data.get("country"), data.get("postalCode")]
