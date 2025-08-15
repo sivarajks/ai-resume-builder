@@ -6,7 +6,7 @@ from flask import Flask, request, send_file, render_template_string, jsonify
 # --- PDF (ReportLab) ---
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.units import inch
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
@@ -62,8 +62,8 @@ def generate_pdf_bytes(data: dict) -> BytesIO:
     base.fontSize = 10.5
     base.leading = 13
 
-    h_name = ParagraphStyle('h_name', parent=base, fontSize=18, leading=22, spaceAfter=4, alignment=TA_LEFT)
-    h_job  = ParagraphStyle('h_job', parent=base, fontSize=12, leading=15, textColor="#1f3c88", spaceAfter=6)
+    h_name = ParagraphStyle('h_name', parent=base, fontSize=18, leading=22, spaceAfter=4, alignment=TA_CENTER)
+    h_job  = ParagraphStyle('h_job', parent=base, fontSize=12, leading=15, textColor="#1f3c88", spaceAfter=6, alignment=TA_CENTER)
     h_sec  = ParagraphStyle('h_sec', parent=base, fontSize=11, leading=14, spaceBefore=10, spaceAfter=4)
     small  = ParagraphStyle('small', parent=base, fontSize=9.5, leading=12)
 
@@ -157,9 +157,9 @@ def generate_pdf_bytes(data: dict) -> BytesIO:
     buf.seek(0)
     return buf
 
-# -------------------------
+# ---------------------------
 # DOCX generator
-# -------------------------
+# ---------------------------
 def generate_docx_bytes(data: dict) -> BytesIO:
     doc = Document()
     style = doc.styles['Normal']
@@ -259,7 +259,7 @@ def generate_docx_bytes(data: dict) -> BytesIO:
 # -------------------------
 @app.route("/", methods=["GET"])
 def index():
-    return render_template_string(HTML_PAGE)
+    return render_template_string(index)
 
 @app.route("/download-pdf", methods=["POST"])
 def download_pdf():
